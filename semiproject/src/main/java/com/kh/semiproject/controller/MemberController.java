@@ -16,6 +16,8 @@ import com.kh.semiproject.dao.MemberDao;
 import com.kh.semiproject.dto.MemberDto;
 import com.kh.semiproject.service.AttachmentService;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 @Controller
@@ -59,7 +61,9 @@ public class MemberController {
 	}
 
 	@PostMapping("/login")
-	public String login(@ModelAttribute MemberDto memberDto, HttpSession session) {
+	public String login(@ModelAttribute MemberDto memberDto, HttpSession session,
+			@RequestParam (required=false)String remember,
+			HttpServletResponse response) {
 		MemberDto findDto = memberDao.selectOne(memberDto.getMemberId());
 		// 아이디가 없으면 findDto = null
 		if (findDto == null) {
@@ -74,6 +78,18 @@ public class MemberController {
 			session.setAttribute("userLevel", findDto.getMemberLevel());
 			// 최종로그인시각 갱신 처리
 			memberDao.updateMemberLogin(findDto.getMemberId());
+			
+			//(+추가) 아이디 저장하기에 대해 쿠키 생성/소멸 처리
+			if(remember==null) {
+				
+			}
+			else {
+				Cookie cookie=new Cookie("saveId",memberDto.getMemberId());
+				cookie.setMaxAge(4*7*24*60*60);
+				response.addCookie(cookie);
+			}
+			
+			
 			return "redirect:/";
 		} else {// 로그인 실패시
 			return "redirect:login?error";// 로그인 페이지로 쫒아내기
